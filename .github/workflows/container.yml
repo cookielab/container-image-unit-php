@@ -17,7 +17,7 @@ jobs:
   build:
     name: Build container image and push it to registry
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       id-token: write
       contents: read
@@ -63,7 +63,7 @@ jobs:
 
       - name: Build and push - testing - slim
         uses: docker/build-push-action@v3
-        timeout-minutes: 15
+        timeout-minutes: 30
         if: ${{ !steps.get-version.outputs.is-semver }}
         with:
           context: .
