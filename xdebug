@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -e
+
+ENABLED=$1
+MODE=${2:-"debug"}
+PORT=${3:-9003}
+INTERNAL_HOST_IP="$4"
+
+curl_reload()
+{
+    curl -X PUT -d '{"display_errors": "0"}' \
+      --unix-socket /var/run/control.unit.sock \
+      http://localhost/config/applications/php/options/admin
+
+    curl -X PUT -d '{}' \
+      --unix-socket /var/run/control.unit.sock \
+      http://localhost/config/applications/php/options/admin
+}
+
+if [[ $ENABLED -eq 1 ]]; then
+    if [[ -z $INTERNAL_HOST_IP ]]; then
+        if ping -c 1 host.docker.internal | grep '1 received'; then
+            INTERNAL_HOST_IP=host.docker.internal
+        else
+            INTERNAL_HOST_IP=$(ip route show default | awk '/default/ {print $3}')
+        fi
+    fi
+
+    touch /usr/local/etc/php/conf.d/xdebug.ini
+    echo "zend_extension = xdebug.so" >> /usr/local/etc/php/conf.d/xdebug.ini
+    echo "xdebug.mode = ${MODE}" >> /usr/local/etc/php/conf.d/xdebug.ini
+    echo "xdebug.client_host = ${INTERNAL_HOST_IP}" >> /usr/local/etc/php/conf.d/xdebug.ini
+    echo "xdebug.client_port = ${PORT}" >> /usr/local/etc/php/conf.d/xdebug.ini
+    echo "xdebug.start_with_request = yes" >> /usr/local/etc/php/conf.d/xdebug.ini
+
+    curl_reload
+    echo "### XDebug enabled for $INTERNAL_HOST_IP:$PORT mode:$MODE ###"
+else
+    rm -f /usr/local/etc/php/conf.d/xdebug.ini
+
+    curl_reload
+    echo "### XDebug disabled ###"
+fi
