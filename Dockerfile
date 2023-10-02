@@ -4,6 +4,8 @@ ARG COMPOSER_VERSION=2.6.4
 
 FROM php:${PHP_VERSION}-cli AS builder
 
+ARG UNIT_VERSION
+
 RUN set -ex \
     && savedAptMark="$(apt-mark showmanual)" \
     && apt-get update \

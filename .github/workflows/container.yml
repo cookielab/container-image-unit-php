@@ -7,10 +7,10 @@ on:
       - '**'
 
 env:
-  php_version: 8.2.8
-  unit_version: 1.30.0-1
-  composer_version: 2.5.8
-  datadog_version: 0.90.0
+  php_version: 8.2.11
+  unit_version: 1.31.0-1
+  composer_version: 2.6.4
+  datadog_version: 0.92.1
   xdebug_version: 3.2.2
 
 jobs:
