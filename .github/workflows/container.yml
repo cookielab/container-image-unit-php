@@ -83,7 +83,7 @@ jobs:
       
       - name: Build and push - pre-release - slim
         uses: docker/build-push-action@v3
-        timeout-minutes: 60
+        timeout-minutes: 180
         if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease != '' }}
         with:
           context: .
