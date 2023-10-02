@@ -89,10 +89,16 @@ if [ "$1" = "unitd" ] || [ "$1" = "unitd-debug" ]; then
                 curl_put $f "js_modules/$(basename $f .js)"
             done
 
-            echo "$0: Looking for configuration snippets in /docker-entrypoint.d/..."
-            for f in $(/usr/bin/find /docker-entrypoint.d/ -type f -name "*.json"); do
+            echo "$0: Looking for configuration template snippets in /docker-entrypoint.d/..."
+            for f in $(/usr/bin/find /docker-entrypoint.d/ -type f -name "*.json.tpl"); do
                 echo "$0: Generating configuration $f";
                 config_tpl $f
+                echo "$0: Applying configuration $f";
+                curl_put $f "config"
+            done
+
+            echo "$0: Looking for configuration snippets in /docker-entrypoint.d/..."
+            for f in $(/usr/bin/find /docker-entrypoint.d/ -type f -name "*.json"); do
                 echo "$0: Applying configuration $f";
                 curl_put $f "config"
             done
@@ -104,7 +110,7 @@ if [ "$1" = "unitd" ] || [ "$1" = "unitd-debug" ]; then
             done
 
             # warn on filetypes we don't know what to do with
-            for f in $(/usr/bin/find /docker-entrypoint.d/ -type f -not -name "*.sh" -not -name "*.json" -not -name "*.pem" -not -name "*.js"); do
+            for f in $(/usr/bin/find /docker-entrypoint.d/ -type f -not -name "*.sh" -not -name "*.json.tpl" -not -name "*.json" -not -name "*.pem" -not -name "*.js"); do
                 echo "$0: Ignoring $f";
             done
         else
