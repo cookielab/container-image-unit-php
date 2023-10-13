@@ -61,7 +61,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and push - testing - slim
+      - name: Build and push - testing
         uses: docker/build-push-action@v3
         timeout-minutes: 180
         if: ${{ !steps.get-version.outputs.is-semver }}
@@ -74,14 +74,13 @@ jobs:
             PHP_VERSION=${{ env.php_version }}
             UNIT_VERSION=${{ env.unit_version }}
             COMPOSER_VERSION=${{ env.composer_version }}
-            DATADOG_VERSION=${{ env.datadog_version }}
             XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
             cookielab/unit-php:${{ github.ref_name }}
             public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
       
-      - name: Build and push - pre-release - slim
+      - name: Build and push - pre-release
         uses: docker/build-push-action@v3
         timeout-minutes: 180
         if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease != '' }}
@@ -94,14 +93,13 @@ jobs:
             PHP_VERSION=${{ env.php_version }}
             UNIT_VERSION=${{ env.unit_version }}
             COMPOSER_VERSION=${{ env.composer_version }}
-            DATADOG_VERSION=${{ env.datadog_version }}
             XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
             cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}
       
-      - name: Build and push - stable - slim
+      - name: Build and push - stable
         uses: docker/build-push-action@v3
         timeout-minutes: 180
         if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease == '' }}
@@ -111,10 +109,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
-            KUBECTL_VERSION=${{ env.kubectl_version }}
-            HELM_VERSION=${{ env.helm_version }}
-            SENTRY_CLI_VERSION=${{ env.sentry_cli_version }}
-            AWS_CLI_VERSION=${{ env.aws_cli_version }}
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
             cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
@@ -128,3 +126,81 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}
+      
+      - name: Build and push - testing - Datadog
+        uses: docker/build-push-action@v3
+        timeout-minutes: 180
+        if: ${{ !steps.get-version.outputs.is-semver }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: |
+            cookielab/unit-php:${{ github.ref_name }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-dd
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-dd
+            cookielab/unit-php:${{ github.ref_name }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-datadog
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-datadog
+      
+      - name: Build and push - pre-release - Datadog
+        uses: docker/build-push-action@v3
+        timeout-minutes: 180
+        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease != '' }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            VERSION=${{ steps.get-version.outputs.version-without-v }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: |
+            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-dd
+            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-datadog
+      
+      - name: Build and push - stable - Datadog
+        uses: docker/build-push-action@v3
+        timeout-minutes: 180
+        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease == '' }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            VERSION=${{ steps.get-version.outputs.version-without-v }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: |
+            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-dd
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-dd
+            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
+            cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-datadog
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
+            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-datadog

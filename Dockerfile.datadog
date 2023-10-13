@@ -1,0 +1,17 @@
+ARG VERSION
+
+FROM cookielab/unit-php:${VERSION}}
+
+ARG DATADOG_VERSION
+ARG TARGETARCH
+
+COPY ./install-ddtrace.sh /install-ddtrace.sh
+RUN /install-ddtrace.sh
+RUN rm /install-ddtrace.sh
+
+ENV PHP_DDTRACE_DISABLE on
+
+# unit
+USER 1000
+
+ONBUILD USER root

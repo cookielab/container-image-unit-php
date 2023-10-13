@@ -116,17 +116,11 @@ ENV PHP_DATE_TIMEZONE UTC
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS 0
 ENV PHP_DISPLAY_STARTUP_ERRORS off
 ENV PHP_DISPLAY_ERRORS off
-ENV PHP_DDTRACE_DISABLE on
 
 COPY ./php.ini /usr/local/etc/php/conf.d/90-base-image.ini
 COPY ./config.json /docker-entrypoint.d/config.json.tpl
 
-ARG DATADOG_VERSION
 ARG TARGETARCH
-
-COPY ./install-ddtrace.sh /install-ddtrace.sh
-RUN /install-ddtrace.sh
-RUN rm /install-ddtrace.sh
 
 COPY ./xdebug /usr/local/bin/xdebug
 
