@@ -9,7 +9,7 @@ on:
 env:
   php_version: 8.2.14
   unit_version: 1.31.1
-  composer_version: 2.6.5
+  composer_version: 2.6.6
   datadog_version: 0.92.2
   xdebug_version: 3.2.2
 
