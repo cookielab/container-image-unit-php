@@ -1,6 +1,6 @@
 ARG VERSION
 
-FROM cookielab/unit-php:${VERSION}}
+FROM cookielab/unit-php:${VERSION}
 
 ARG DATADOG_VERSION
 ARG TARGETARCH
