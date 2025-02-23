@@ -1,10 +1,10 @@
 name: Container Image
+
 on:
   push:
     branches:
-      - 'main'
-    tags:        
-      - '**'
+      - main
+    tags: "**"
 
 env:
   php_version: 8.4.2
@@ -14,10 +14,228 @@ env:
   xdebug_version: 3.4.0
 
 jobs:
-  build:
-    name: Build container image and push it to registry
+  build-amd64:
+    name: Build amd64 Image
     runs-on: ubuntu-latest
     timeout-minutes: 190
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
+
+      - name: Build and push - testing
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-amd64
+
+      - name: Build and push - pre-release
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-amd64
+
+      - name: Build and push - stable
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-amd64
+
+      - name: Build and push - testing - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-dd-amd64
+
+      - name: Build and push - pre-release - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            VERSION=${{ github.event.release.tag_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-amd64
+
+      - name: Build and push - stable - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            VERSION=${{ github.event.release.tag_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-amd64
+
+  build-arm64:
+    name: Build arm64 Image
+    runs-on: [ubuntu-latest, arm64]
+    timeout-minutes: 190
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
+
+      - name: Build and push - testing
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-arm64
+
+      - name: Build and push - pre-release
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+
+      - name: Build and push - stable
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+
+      - name: Build and push - testing - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-dd-arm64
+
+      - name: Build and push - pre-release - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            VERSION=${{ github.event.release.tag_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-arm64
+
+      - name: Build and push - stable - Datadog
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile.datadog
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            VERSION=${{ github.event.release.tag_name }}
+            DATADOG_VERSION=${{ env.datadog_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-arm64
+
+  create-manifest:
+    name: Create Manifest and Push
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
@@ -51,94 +269,60 @@ jobs:
         with:
           registry-type: public
 
-      - name: Parse version
-        id: get-version
-        uses: battila7/get-version-action@v2
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build and push - testing
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ !steps.get-version.outputs.is-semver }}
+        if: ${{ !github.event.release }}
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            PHP_VERSION=${{ env.php_version }}
-            UNIT_VERSION=${{ env.unit_version }}
-            COMPOSER_VERSION=${{ env.composer_version }}
-            XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
             cookielab/unit-php:${{ github.ref_name }}
             public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-      
+
       - name: Build and push - pre-release
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease != '' }}
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            PHP_VERSION=${{ env.php_version }}
-            UNIT_VERSION=${{ env.unit_version }}
-            COMPOSER_VERSION=${{ env.composer_version }}
-            XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}
-      
+            cookielab/unit-php:${{ github.event.release.tag_name }}
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+
       - name: Build and push - stable
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease == '' }}
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            PHP_VERSION=${{ env.php_version }}
-            UNIT_VERSION=${{ env.unit_version }}
-            COMPOSER_VERSION=${{ env.composer_version }}
-            XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: |
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}
-      
+            cookielab/unit-php:${{ github.event.release.tag_name }}
+            cookielab/unit-php:${{ github.event.release.tag_name }}
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+
       - name: Build and push - testing - Datadog
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ !steps.get-version.outputs.is-semver }}
+        if: ${{ !github.event.release }}
         with:
           context: .
           file: ./Dockerfile.datadog
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            VERSION=${{ github.ref_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
           tags: |
             cookielab/unit-php:${{ github.ref_name }}-dd
             public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-dd
@@ -146,61 +330,43 @@ jobs:
             cookielab/unit-php:${{ github.ref_name }}-datadog
             public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-datadog
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}-datadog
-      
+
       - name: Build and push - pre-release - Datadog
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease != '' }}
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
         with:
           context: .
           file: ./Dockerfile.datadog
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            VERSION=${{ steps.get-version.outputs.version-without-v }}
-            DATADOG_VERSION=${{ env.datadog_version }}
           tags: |
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-datadog
-      
+            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
+            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
+
       - name: Build and push - stable - Datadog
         uses: docker/build-push-action@v6
         timeout-minutes: 180
-        if: ${{ steps.get-version.outputs.is-semver && steps.get-version.outputs.prerelease == '' }}
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
         with:
           context: .
           file: ./Dockerfile.datadog
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            VERSION=${{ steps.get-version.outputs.version-without-v }}
-            DATADOG_VERSION=${{ env.datadog_version }}
           tags: |
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-datadog
+            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
+            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
