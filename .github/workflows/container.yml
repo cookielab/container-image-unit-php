@@ -17,7 +17,7 @@ env:
 jobs:
   build-amd64:
     name: Build amd64 Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 190
     permissions:
       id-token: write
@@ -126,7 +126,7 @@ jobs:
 
   build-arm64:
     name: Build arm64 Image
-    runs-on: [ubuntu-latest, arm64]
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 190
     permissions:
       id-token: write
@@ -236,7 +236,7 @@ jobs:
   create-manifest:
     name: Create Manifest and Push
     needs: [build-amd64, build-arm64]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
       contents: read
