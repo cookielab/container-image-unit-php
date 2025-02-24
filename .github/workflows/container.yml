@@ -82,48 +82,6 @@ jobs:
             XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: cookielab/unit-php:${{ github.event.release.tag_name }}-amd64
 
-      - name: Build and push - testing - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ !github.event.release }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64
-          push: false
-          build-args: |
-            VERSION=${{ github.ref_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.ref_name }}-dd-amd64
-
-      - name: Build and push - pre-release - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == true }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64
-          push: false
-          build-args: |
-            VERSION=${{ github.event.release.tag_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-amd64
-
-      - name: Build and push - stable - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == false }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64
-          push: false
-          build-args: |
-            VERSION=${{ github.event.release.tag_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-amd64
-
   build-arm64:
     name: Build arm64 Image
     runs-on: ubuntu-24.04-arm
@@ -190,48 +148,6 @@ jobs:
             COMPOSER_VERSION=${{ env.composer_version }}
             XDEBUG_VERSION=${{ env.xdebug_version }}
           tags: cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
-
-      - name: Build and push - testing - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ !github.event.release }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/arm64
-          push: false
-          build-args: |
-            VERSION=${{ github.ref_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.ref_name }}-dd-arm64
-
-      - name: Build and push - pre-release - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == true }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/arm64
-          push: false
-          build-args: |
-            VERSION=${{ github.event.release.tag_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-arm64
-
-      - name: Build and push - stable - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == false }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/arm64
-          push: false
-          build-args: |
-            VERSION=${{ github.event.release.tag_name }}
-            DATADOG_VERSION=${{ env.datadog_version }}
-          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-dd-arm64
 
   create-manifest:
     name: Create Manifest and Push
@@ -314,60 +230,3 @@ jobs:
             public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
             ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
             ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
-
-      - name: Build and push - testing - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ !github.event.release }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            cookielab/unit-php:${{ github.ref_name }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-dd
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-dd
-            cookielab/unit-php:${{ github.ref_name }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-datadog
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-datadog
-
-      - name: Build and push - pre-release - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == true }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
-            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
-
-      - name: Build and push - stable - Datadog
-        uses: docker/build-push-action@v6
-        timeout-minutes: 180
-        if: ${{ github.event.release && github.event.release.prerelease == false }}
-        with:
-          context: .
-          file: ./Dockerfile.datadog
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-dd
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-dd
-            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-datadog
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
-            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-datadog
