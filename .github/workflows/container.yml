@@ -1,84 +1,235 @@
-create-manifest:
-  name: Create Manifest and Push
-  needs: [build-amd64, build-arm64]
-  runs-on: ubuntu-24.04
-  permissions:
-    id-token: write
-    contents: read
-    packages: write
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+name: Container Image
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+on:
+  push:
+    branches:
+      - main
+      - multi-arch
+    tags: "**"
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+env:
+  php_version: 8.4.2
+  unit_version: 1.34.0
+  composer_version: 2.8.4
+  datadog_version: 1.5.1
+  xdebug_version: 3.4.0
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region: us-east-1
+jobs:
+  build-amd64:
+    name: Build amd64 Image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 190
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Login to Amazon ECR Public
-      id: login-ecr-public
-      uses: aws-actions/amazon-ecr-login@v2
-      with:
-        registry-type: public
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
 
-    - name: Create and push manifest - testing
-      if: ${{ !github.event.release }}
-      run: |
-        docker manifest create cookielab/unit-php:${{ github.ref_name }} \
-          cookielab/unit-php:${{ github.ref_name }}-amd64 \
-          cookielab/unit-php:${{ github.ref_name }}-arm64
-        docker manifest push cookielab/unit-php:${{ github.ref_name }}
-        docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.ref_name }} \
-          public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-amd64 \
-          public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-arm64
-        docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}
-        docker manifest create ghcr.io/${{ github.repository }}:${{ github.ref_name }} \
-          ghcr.io/${{ github.repository }}:${{ github.ref_name }}-amd64 \
-          ghcr.io/${{ github.repository }}:${{ github.ref_name }}-arm64
-        docker manifest push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+      - name: Build and push - testing
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-amd64
 
-    - name: Create and push manifest - pre-release
-      if: ${{ github.event.release && github.event.release.prerelease == true }}
-      run: |
-        docker manifest create cookielab/unit-php:${{ github.event.release.tag_name }} \
-          cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
-          cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
-        docker manifest push cookielab/unit-php:${{ github.event.release.tag_name }}
-        docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }} \
-          public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
-          public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
-        docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
-        docker manifest create ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} \
-          ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-amd64 \
-          ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-arm64
-        docker manifest push ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+      - name: Build and push - pre-release
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-amd64
 
-    - name: Create and push manifest - stable
-      if: ${{ github.event.release && github.event.release.prerelease == false }}
-      run: |
-        docker manifest create cookielab/unit-php:${{ github.event.release.tag_name }} \
-          cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
-          cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
-        docker manifest push cookielab/unit-php:${{ github.event.release.tag_name }}
-        docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }} \
-          public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
-          public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
-        docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
-        docker manifest create ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} \
-          ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-amd64 \
-          ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-arm64
-        docker manifest push ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+      - name: Build and push - stable
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-amd64
+
+  build-arm64:
+    name: Build arm64 Image
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 190
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
+
+      - name: Build and push - testing
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.ref_name }}-arm64
+
+      - name: Build and push - pre-release
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+
+      - name: Build and push - stable
+        uses: docker/build-push-action@v6
+        timeout-minutes: 180
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: false
+          build-args: |
+            PHP_VERSION=${{ env.php_version }}
+            UNIT_VERSION=${{ env.unit_version }}
+            COMPOSER_VERSION=${{ env.composer_version }}
+            XDEBUG_VERSION=${{ env.xdebug_version }}
+          tags: cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+
+  create-manifest:
+    name: Create Manifest and Push
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Create and push manifest - testing
+        if: ${{ !github.event.release }}
+        run: |
+          docker manifest create cookielab/unit-php:${{ github.ref_name }} \
+            cookielab/unit-php:${{ github.ref_name }}-amd64 \
+            cookielab/unit-php:${{ github.ref_name }}-arm64
+          docker manifest push cookielab/unit-php:${{ github.ref_name }}
+          docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.ref_name }} \
+            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-amd64 \
+            public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}-arm64
+          docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.ref_name }}
+          docker manifest create ghcr.io/${{ github.repository }}:${{ github.ref_name }} \
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-amd64 \
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-arm64
+          docker manifest push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+      - name: Create and push manifest - pre-release
+        if: ${{ github.event.release && github.event.release.prerelease == true }}
+        run: |
+          docker manifest create cookielab/unit-php:${{ github.event.release.tag_name }} \
+            cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
+            cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+          docker manifest push cookielab/unit-php:${{ github.event.release.tag_name }}
+          docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }} \
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+          docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
+          docker manifest create ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} \
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-amd64 \
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-arm64
+          docker manifest push ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
+
+      - name: Create and push manifest - stable
+        if: ${{ github.event.release && github.event.release.prerelease == false }}
+        run: |
+          docker manifest create cookielab/unit-php:${{ github.event.release.tag_name }} \
+            cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
+            cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+          docker manifest push cookielab/unit-php:${{ github.event.release.tag_name }}
+          docker manifest create public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }} \
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-amd64 \
+            public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}-arm64
+          docker manifest push public.ecr.aws/cookielab/unit-php:${{ github.event.release.tag_name }}
+          docker manifest create ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} \
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-amd64 \
+            ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}-arm64
+          docker manifest push ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }}
