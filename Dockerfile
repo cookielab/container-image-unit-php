@@ -106,7 +106,7 @@ RUN set -x \
 RUN apt-get update
 RUN apt-get install -y libyaml-dev zlib1g-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev libicu-dev libpq-dev libxml++2.6-dev libxslt1-dev libzip-dev wget ca-certificates ssh git iputils-ping iproute2 libgpgme-dev
 
-ARG XDEBUG_VERSION=3.4.0
+ARG XDEBUG_VERSION=3.4.2
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install gd bcmath intl opcache pdo_pgsql pgsql soap sockets xsl zip
