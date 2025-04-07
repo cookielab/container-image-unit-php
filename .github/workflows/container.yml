@@ -7,7 +7,7 @@ on:
       - '**'
 
 env:
-  php_version: 8.4.2
+  php_version: 8.4.5
   unit_version: 1.34.2
   composer_version: 2.8.4
   datadog_version: 1.5.1
