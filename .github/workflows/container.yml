@@ -117,15 +117,12 @@ jobs:
             cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}
       
       - name: Build and push - testing - Datadog
         uses: docker/build-push-action@v7
@@ -183,24 +180,18 @@ jobs:
             cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-dd
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-dd
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-dd
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-dd
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-dd
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-dd
             cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
             cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.version-without-v }}-datadog
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
             public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            public.ecr.aws/cookielab/unit-php:${{ steps.get-version.outputs.major }}-datadog
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.version-without-v }}-datadog
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}.${{ steps.get-version.outputs.patch }}-datadog
             ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}.${{ steps.get-version.outputs.minor }}-datadog
-            ghcr.io/${{ github.repository }}:${{ steps.get-version.outputs.major }}-datadog
